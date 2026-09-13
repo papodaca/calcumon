@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <g fill="#2e3436">
+    <!-- page outline -->
+    <path fill-rule="evenodd" d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm0 2v12h10V2z"/>
+    <!-- typed lines and answers -->
+    <rect x="4" y="4" width="4" height="1"/>
+    <rect x="10" y="4" width="2" height="1"/>
+    <rect x="4" y="6" width="3" height="1"/>
+    <rect x="10" y="6" width="2" height="1"/>
+    <!-- equals -->
+    <rect x="4" y="9" width="8" height="1"/>
+    <rect x="4" y="11" width="8" height="1"/>
+  </g>
+</svg>

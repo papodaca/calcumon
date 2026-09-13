@@ -4,5 +4,7 @@
     <file compressed="true">vendor/math.min.js</file>
     <file alias="style.css">data/style.css</file>
     <file alias="gtk/help-overlay.ui">data/gtk/help-overlay.ui</file>
+    <file alias="icons/scalable/apps/dev.calcumon.Calcumon.svg" compressed="true">data/icons/hicolor/scalable/apps/dev.calcumon.Calcumon.svg</file>
+    <file alias="icons/scalable/apps/dev.calcumon.Calcumon-symbolic.svg" compressed="true">data/icons/hicolor/symbolic/apps/dev.calcumon.Calcumon-symbolic.svg</file>
   </gresource>
 </gresources>

@@ -14,6 +14,16 @@ gschema_file = configure_file(
   install_dir: get_option('datadir') / 'glib-2.0' / 'schemas',
 )
 
+icon_dir = get_option('datadir') / 'icons' / 'hicolor'
+install_data(
+  'icons/hicolor/scalable/apps/dev.calcumon.Calcumon.svg',
+  install_dir: icon_dir / 'scalable' / 'apps',
+)
+install_data(
+  'icons/hicolor/symbolic/apps/dev.calcumon.Calcumon-symbolic.svg',
+  install_dir: icon_dir / 'symbolic' / 'apps',
+)
+
 glib_compile_schemas = find_program('glib-compile-schemas')
 custom_target(
   'gschemas.compiled',
