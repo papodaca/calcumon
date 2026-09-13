@@ -27,6 +27,47 @@ int main (string[] args) {
         want (1, Calcumon.LineKind.ANSWER, "5"),
         want (2, Calcumon.LineKind.ANSWER, "15")
     });
+    failed += expect_sheet (engine, "10\n20\nans\nline1\ntotal", {
+        want (1, Calcumon.LineKind.ANSWER, "10"),
+        want (2, Calcumon.LineKind.ANSWER, "20"),
+        want (3, Calcumon.LineKind.ANSWER, "20"),
+        want (4, Calcumon.LineKind.ANSWER, "10"),
+        want (5, Calcumon.LineKind.ANSWER, "60")
+    });
+    failed += expect_sheet (engine, "10\n20\n\n30\nsubtotal\ntotal", {
+        want (1, Calcumon.LineKind.ANSWER, "10"),
+        want (2, Calcumon.LineKind.ANSWER, "20"),
+        want (3, Calcumon.LineKind.EMPTY, ""),
+        want (4, Calcumon.LineKind.ANSWER, "30"),
+        want (5, Calcumon.LineKind.ANSWER, "30"),
+        want (6, Calcumon.LineKind.ANSWER, "60")
+    });
+    failed += expect_sheet (engine, "10\n20\navg", {
+        want (1, Calcumon.LineKind.ANSWER, "10"),
+        want (2, Calcumon.LineKind.ANSWER, "20"),
+        want (3, Calcumon.LineKind.ANSWER, "15")
+    });
+    failed += expect_sheet (engine, "100\n+ 20\n* 2", {
+        want (1, Calcumon.LineKind.ANSWER, "100"),
+        want (2, Calcumon.LineKind.ANSWER, "120"),
+        want (3, Calcumon.LineKind.ANSWER, "240")
+    });
+    failed += expect_sheet (engine, "10\n# keep\n20\nsubtotal", {
+        want (1, Calcumon.LineKind.ANSWER, "10"),
+        want (2, Calcumon.LineKind.EMPTY, ""),
+        want (3, Calcumon.LineKind.ANSWER, "20"),
+        want (4, Calcumon.LineKind.ANSWER, "30")
+    });
+    failed += expect_error (engine, "line4");
+    failed += expect_error (engine, "ans");
+    failed += expect_error (engine, "ans = 5");
+    engine.continue_from_previous = false;
+    failed += expect_sheet (engine, "100\n+ 20", {
+        want (1, Calcumon.LineKind.ANSWER, "100"),
+        want (2, Calcumon.LineKind.ANSWER, "20")
+    });
+    engine.continue_from_previous = true;
+    failed += expect_kind (engine, "10\n5 cm\ntotal", 3, Calcumon.LineKind.ERROR);
 
     if (failed > 0) {
         stderr.printf ("%d test(s) failed\n", failed);
@@ -50,6 +91,17 @@ int expect_empty (Calcumon.SheetEngine engine, string source) {
     return expect_sheet (engine, source, {
         want (1, Calcumon.LineKind.EMPTY, "")
     });
+}
+
+int expect_kind (Calcumon.SheetEngine engine, string source, int line, Calcumon.LineKind kind) {
+    var got = engine.evaluate (source);
+    if (line < 1 || line > got.length || got[line - 1].kind != kind) {
+        stderr.printf ("FAIL kind %s line %d: got %s\n",
+            describe (source), line,
+            line >= 1 && line <= got.length ? kind_name (got[line - 1].kind) : "missing");
+        return 1;
+    }
+    return 0;
 }
 
 int expect_error (Calcumon.SheetEngine engine, string source) {
