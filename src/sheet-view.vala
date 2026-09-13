@@ -3,12 +3,14 @@ public class Calcumon.SheetView : Gtk.Box {
     private Gtk.TextView? results_view;
     private Gtk.ScrolledWindow? editor_scroll;
     private Gtk.ScrolledWindow? results_scroll;
+    private Gtk.Paned? paned;
     private Gtk.TextTag? error_tag;
     private SheetEngine? engine;
     private uint debounce_id = 0;
     private ulong dark_handler = 0;
     private ulong settings_handler = 0;
     private Gtk.CssProvider? font_css;
+    private bool split_placed = false;
 
     public string text {
         owned get {
@@ -95,6 +97,7 @@ public class Calcumon.SheetView : Gtk.Box {
         editor_scroll.has_frame = false;
         editor_scroll.hexpand = true;
         editor_scroll.vexpand = true;
+        editor_scroll.width_request = 160;
         editor_scroll.set_child (editor);
 
         results_scroll = new Gtk.ScrolledWindow ();
@@ -102,26 +105,38 @@ public class Calcumon.SheetView : Gtk.Box {
         results_scroll.has_frame = false;
         results_scroll.hexpand = true;
         results_scroll.vexpand = true;
-        results_scroll.width_request = 140;
         results_scroll.set_child (results_view);
         results_scroll.set_vadjustment (editor_scroll.get_vadjustment ());
 
-        var separator = new Gtk.Separator (Gtk.Orientation.VERTICAL);
+        paned = new Gtk.Paned (Gtk.Orientation.HORIZONTAL);
+        paned.add_css_class ("sheet-paned");
+        paned.hexpand = true;
+        paned.vexpand = true;
+        paned.wide_handle = true;
+        paned.resize_start_child = true;
+        paned.resize_end_child = false;
+        paned.shrink_start_child = false;
+        paned.shrink_end_child = false;
+        paned.start_child = editor_scroll;
+        paned.end_child = results_scroll;
+        append (paned);
 
-        append (editor_scroll);
-        append (separator);
-        append (results_scroll);
-
-        map.connect (sync_error_color);
-        dark_handler = Adw.StyleManager.get_default ().notify["dark"].connect (sync_error_color);
+        map.connect (sync_theme);
+        dark_handler = Adw.StyleManager.get_default ().notify["dark"].connect (sync_theme);
 
         editor.buffer.changed.connect (on_buffer_changed);
-        realize.connect (update_result_width);
+        map.connect (() => {
+            Idle.add (() => {
+                place_split_once ();
+                return Source.REMOVE;
+            });
+        });
         var app_settings = AppSettings.get_default ();
         if (app_settings.settings != null) {
             settings_handler = app_settings.settings.changed.connect ((key) => apply_settings ());
         }
         apply_settings ();
+        sync_theme ();
         recompute ();
     }
 
@@ -189,18 +204,39 @@ public class Calcumon.SheetView : Gtk.Box {
         results_scroll.set_vadjustment (editor_scroll.get_vadjustment ());
     }
 
-    private void update_result_width () {
-        if (results_view == null || results_scroll == null) {
-            return;
+    private int result_char_width () {
+        if (results_view == null) {
+            return 8;
         }
         var layout = results_view.create_pango_layout ("0");
         int width;
         int height;
         layout.get_pixel_size (out width, out height);
-        if (width <= 0) {
-            width = 8;
+        return width > 0 ? width : 8;
+    }
+
+    private void update_result_min_width () {
+        if (results_scroll == null) {
+            return;
         }
-        results_scroll.width_request = width * 16;
+        results_scroll.width_request = result_char_width () * 8;
+    }
+
+    private void place_split_once () {
+        update_result_min_width ();
+        if (split_placed || paned == null) {
+            return;
+        }
+        int total = paned.get_width ();
+        if (total < 2) {
+            return;
+        }
+        int results_w = result_char_width () * 16;
+        if (results_w < 140) {
+            results_w = 140;
+        }
+        paned.position = int.max (160, total - results_w);
+        split_placed = true;
     }
 
     private void apply_settings () {
@@ -214,7 +250,7 @@ public class Calcumon.SheetView : Gtk.Box {
         engine.continue_from_previous = s.continue_from_previous;
         apply_font (s.font_size);
         recompute ();
-        update_result_width ();
+        update_result_min_width ();
     }
 
     private void apply_font (int pt) {
@@ -226,11 +262,31 @@ public class Calcumon.SheetView : Gtk.Box {
         font_css.load_from_string (".sheet-editor, .sheet-results { font-size: %dpt; }".printf (pt));
     }
 
-    private void sync_error_color () {
-        if (Adw.StyleManager.get_default ().dark) {
-            error_tag.foreground = "#f66151";
+    private void sync_theme () {
+        var dark = Adw.StyleManager.get_default ().dark;
+        if (error_tag != null) {
+            error_tag.foreground = dark ? "#f66151" : "#c01c28";
+        }
+        var buffer = editor != null ? editor.buffer as GtkSource.Buffer : null;
+        if (buffer == null) {
+            return;
+        }
+        var manager = GtkSource.StyleSchemeManager.get_default ();
+        string[] ids;
+        if (dark) {
+            ids = { "Adwaita-dark", "oblivion", "solarized-dark" };
         } else {
-            error_tag.foreground = "#c01c28";
+            ids = { "Adwaita", "classic", "kate" };
+        }
+        GtkSource.StyleScheme? scheme = null;
+        foreach (var id in ids) {
+            scheme = manager.get_scheme (id);
+            if (scheme != null) {
+                break;
+            }
+        }
+        if (scheme != null) {
+            buffer.style_scheme = scheme;
         }
     }
 }

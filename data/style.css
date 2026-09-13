@@ -1,6 +1,7 @@
 .sheet-editor,
 .sheet-results {
-  background: transparent;
+  background-color: @view_bg_color;
+  color: @view_fg_color;
 }
 
 .sheet-results text {
