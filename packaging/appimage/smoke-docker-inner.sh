@@ -19,6 +19,7 @@ apt-get install -y --no-install-recommends \
   gobject-introspection \
   gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-gtksource-5 \
   libglib2.0-bin librsvg2-bin librsvg2-common \
+  desktop-file-utils \
   file patchelf \
   dpkg-dev findutils \
   sudo
