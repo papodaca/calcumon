@@ -1,0 +1,66 @@
+# Local Arch package. From this directory:
+#   makepkg -si
+# Builds the git checkout two directories up (repo root).
+
+pkgname=calcumon
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='GTK4/libadwaita notepad calculator'
+url='https://github.com/papodaca/calcumon'
+license=('MIT')
+arch=('x86_64' 'aarch64')
+
+_repo_root=$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../.." && pwd)
+
+source=()
+sha256sums=()
+
+options=('!debug')
+
+makedepends=(
+  meson
+  ninja
+  vala
+  pkgconf
+  git
+  gcc
+  desktop-file-utils
+  appstream
+)
+
+depends=(
+  gtk4
+  libadwaita
+  gtksourceview5
+  webkitgtk-6.0
+  json-glib
+  glib2
+  gcc-libs
+  hicolor-icon-theme
+)
+
+pkgver() {
+  "${_repo_root}/packaging/version.sh" --arch
+}
+
+build() {
+  cd "${_repo_root}"
+  if [[ ! -f build-pkg/build.ninja ]]; then
+    arch-meson . build-pkg
+  fi
+  meson compile -C build-pkg
+}
+
+check() {
+  cd "${_repo_root}"
+  meson test -C build-pkg --print-errorlogs
+  desktop-file-validate build-pkg/data/dev.calcumon.Calcumon.desktop
+  appstreamcli validate --no-net --explain \
+    data/dev.calcumon.Calcumon.metainfo.xml
+}
+
+package() {
+  meson install -C "${_repo_root}/build-pkg" --destdir "${pkgdir}"
+  install -Dm644 "${_repo_root}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

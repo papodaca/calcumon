@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.calcumon.Calcumon</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <name>Calcumon</name>
+  <summary>Notepad calculator</summary>
+  <description>
+    <p>
+      Type math in a text view. Each line gets an answer as you type. Notes and
+      expressions share the same page, and pages are tabs.
+    </p>
+    <p>
+      Evaluation uses math.js inside a JavaScriptCore context. One parser per
+      page, so a value defined on one line is in scope on the next.
+    </p>
+  </description>
+
+  <developer id="dev.calcumon">
+    <name>papodaca</name>
+  </developer>
+
+  <url type="homepage">https://github.com/papodaca/calcumon</url>
+  <url type="bugtracker">https://github.com/papodaca/calcumon/issues</url>
+  <url type="vcs-browser">https://github.com/papodaca/calcumon</url>
+
+  <launchable type="desktop-id">dev.calcumon.Calcumon.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#3584e4</color>
+    <color type="primary" scheme_preference="dark">#78aeed</color>
+  </branding>
+
+  <releases>
+    <release version="0.1.0" date="2026-09-12">
+      <description translate="no">
+        <p>
+          First GTK4 / libadwaita notepad calculator: live answers beside each
+          line, tabs that save as you type, and a short preferences list.
+        </p>
+      </description>
+    </release>
+  </releases>
+</component>

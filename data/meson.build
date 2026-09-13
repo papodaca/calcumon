@@ -14,6 +14,11 @@ gschema_file = configure_file(
   install_dir: get_option('datadir') / 'glib-2.0' / 'schemas',
 )
 
+install_data(
+  'dev.calcumon.Calcumon.metainfo.xml',
+  install_dir: get_option('datadir') / 'metainfo',
+)
+
 icon_dir = get_option('datadir') / 'icons' / 'hicolor'
 install_data(
   'icons/hicolor/scalable/apps/dev.calcumon.Calcumon.svg',

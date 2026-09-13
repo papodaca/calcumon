@@ -5,6 +5,6 @@ Exec=calcumon
 Icon=dev.calcumon.Calcumon
 Terminal=false
 Type=Application
-Categories=Utility;Calculator;
+Categories=GTK;Utility;Calculator;
 StartupNotify=true
 Keywords=calculator;math;notepad;
