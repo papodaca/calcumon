@@ -16,6 +16,7 @@ adw_dep = dependency('libadwaita-1', version: '>= 1.5')
 gtksource_dep = dependency('gtksourceview-5', version: '>= 5.0')
 gio_dep = dependency('gio-2.0')
 jsc_dep = dependency('javascriptcoregtk-6.0')
+json_dep = dependency('json-glib-1.0')
 
 subdir('data')
 subdir('src')

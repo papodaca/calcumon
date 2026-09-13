@@ -5,6 +5,11 @@ engine_sources = files(
   'engine/sheet-engine.vala',
 )
 
+page_sources = files(
+  'page.vala',
+  'page-store.vala',
+)
+
 sheet_view_source = files('sheet-view.vala')
 
 calcumon_resources = gnome.compile_resources(
@@ -20,6 +25,7 @@ calcumon_deps = [
   gtksource_dep,
   gio_dep,
   jsc_dep,
+  json_dep,
 ]
 
 executable(
@@ -28,7 +34,7 @@ executable(
     'main.vala',
     'application.vala',
     'window.vala',
-  ) + sheet_view_source + engine_sources,
+  ) + page_sources + sheet_view_source + engine_sources,
   calcumon_resources,
   dependencies: calcumon_deps,
   vala_args: [

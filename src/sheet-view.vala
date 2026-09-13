@@ -32,6 +32,8 @@ public class Calcumon.SheetView : Gtk.Box {
         }
     }
 
+    public signal void content_changed ();
+
     public SheetView () {
         Object (orientation: Gtk.Orientation.HORIZONTAL, spacing: 0);
     }
@@ -129,6 +131,7 @@ public class Calcumon.SheetView : Gtk.Box {
     }
 
     private void on_buffer_changed () {
+        content_changed ();
         if (debounce_id != 0) {
             Source.remove (debounce_id);
         }

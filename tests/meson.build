@@ -30,3 +30,17 @@ sheet_smoke = executable(
 )
 
 test('sheet-smoke', sheet_smoke)
+
+page_store_test = executable(
+  'page-store-test',
+  files('page-store-test.vala') + page_sources,
+  dependencies: [
+    gio_dep,
+    json_dep,
+  ],
+  vala_args: [
+    '--target-glib=2.78',
+  ],
+)
+
+test('page-store', page_store_test)

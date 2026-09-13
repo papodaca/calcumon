@@ -13,6 +13,8 @@ public class Calcumon.Application : Adw.Application {
         };
         add_action_entries (entries, this);
         set_accels_for_action ("app.quit", { "<primary>q" });
+        set_accels_for_action ("win.new-page", { "<primary>n" });
+        set_accels_for_action ("win.close-page", { "<primary>w" });
     }
 
     protected override void startup () {
