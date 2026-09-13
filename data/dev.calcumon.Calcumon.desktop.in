@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Calcumon
+Comment=Notepad calculator
+Exec=calcumon
+Icon=dev.calcumon.Calcumon
+Terminal=false
+Type=Application
+Categories=Utility;Calculator;
+StartupNotify=true
+Keywords=calculator;math;notepad;
