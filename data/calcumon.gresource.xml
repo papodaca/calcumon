@@ -2,5 +2,6 @@
 <gresources>
   <gresource prefix="/dev/calcumon/Calcumon">
     <file compressed="true">vendor/math.min.js</file>
+    <file alias="style.css">data/style.css</file>
   </gresource>
 </gresources>

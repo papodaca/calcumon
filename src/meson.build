@@ -5,6 +5,8 @@ engine_sources = files(
   'engine/sheet-engine.vala',
 )
 
+sheet_view_source = files('sheet-view.vala')
+
 calcumon_resources = gnome.compile_resources(
   'calcumon-resources',
   meson.project_source_root() / 'data' / 'calcumon.gresource.xml',
@@ -26,7 +28,7 @@ executable(
     'main.vala',
     'application.vala',
     'window.vala',
-  ) + engine_sources,
+  ) + sheet_view_source + engine_sources,
   calcumon_resources,
   dependencies: calcumon_deps,
   vala_args: [

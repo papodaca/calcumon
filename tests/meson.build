@@ -12,3 +12,21 @@ engine_test = executable(
 )
 
 test('engine', engine_test)
+
+sheet_smoke = executable(
+  'sheet-smoke',
+  files('sheet-smoke.vala') + sheet_view_source + engine_sources,
+  calcumon_resources,
+  dependencies: [
+    gtk_dep,
+    adw_dep,
+    gtksource_dep,
+    gio_dep,
+    jsc_dep,
+  ],
+  vala_args: [
+    '--target-glib=2.78',
+  ],
+)
+
+test('sheet-smoke', sheet_smoke)
