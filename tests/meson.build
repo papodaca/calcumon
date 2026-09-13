@@ -15,7 +15,7 @@ test('engine', engine_test)
 
 sheet_smoke = executable(
   'sheet-smoke',
-  files('sheet-smoke.vala') + sheet_view_source + engine_sources,
+  files('sheet-smoke.vala') + settings_source + sheet_view_source + engine_sources,
   calcumon_resources,
   dependencies: [
     gtk_dep,
@@ -29,7 +29,11 @@ sheet_smoke = executable(
   ],
 )
 
-test('sheet-smoke', sheet_smoke)
+test('sheet-smoke', sheet_smoke,
+  env: {
+    'GSETTINGS_SCHEMA_DIR': meson.project_build_root () / 'data',
+  },
+)
 
 page_store_test = executable(
   'page-store-test',

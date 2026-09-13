@@ -11,6 +11,22 @@ page_sources = files(
 )
 
 sheet_view_source = files('sheet-view.vala')
+settings_source = files('settings.vala')
+
+config_data = configuration_data ()
+config_data.set ('VERSION', meson.project_version ())
+config_vala = configure_file (
+  input: 'config.vala.in',
+  output: 'config.vala',
+  configuration: config_data,
+)
+
+app_sources = files(
+  'main.vala',
+  'application.vala',
+  'window.vala',
+  'preferences.vala',
+)
 
 calcumon_resources = gnome.compile_resources(
   'calcumon-resources',
@@ -30,11 +46,7 @@ calcumon_deps = [
 
 executable(
   'calcumon',
-  files(
-    'main.vala',
-    'application.vala',
-    'window.vala',
-  ) + page_sources + sheet_view_source + engine_sources,
+  app_sources + settings_source + page_sources + sheet_view_source + engine_sources + config_vala,
   calcumon_resources,
   dependencies: calcumon_deps,
   vala_args: [

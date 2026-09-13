@@ -21,3 +21,12 @@ json_dep = dependency('json-glib-1.0')
 subdir('data')
 subdir('src')
 subdir('tests')
+
+meson.add_devenv({
+  'GSETTINGS_SCHEMA_DIR': meson.project_build_root () / 'data',
+})
+
+gnome.post_install(
+  glib_compile_schemas: true,
+  update_desktop_database: true,
+)

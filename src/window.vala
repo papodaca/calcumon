@@ -21,10 +21,30 @@ public class Calcumon.Window : Adw.ApplicationWindow {
             { "new-page", on_new_page },
             { "close-page", on_close_page_action },
             { "rename-page", on_rename_page },
+            { "preferences", on_preferences },
+            { "about", on_about },
+            { "font-increase", on_font_increase },
+            { "font-decrease", on_font_decrease },
         };
         add_action_entries (entries, this);
 
         var header = new Adw.HeaderBar ();
+        var header_menu = new Menu ();
+        header_menu.append ("Preferences", "win.preferences");
+        header_menu.append ("Keyboard Shortcuts", "win.show-help-overlay");
+        header_menu.append ("About Calcumon", "win.about");
+        var menu_btn = new Gtk.MenuButton ();
+        menu_btn.icon_name = "open-menu-symbolic";
+        menu_btn.tooltip_text = "Main menu";
+        menu_btn.menu_model = header_menu;
+        header.pack_end (menu_btn);
+
+        try {
+            var builder = new Gtk.Builder.from_resource ("/dev/calcumon/Calcumon/gtk/help-overlay.ui");
+            set_help_overlay (builder.get_object ("help_overlay") as Gtk.ShortcutsWindow);
+        } catch (Error e) {
+            warning ("Could not load shortcuts overlay: %s", e.message);
+        }
 
         tab_view = new Adw.TabView ();
         tab_view.hexpand = true;
@@ -284,5 +304,31 @@ public class Calcumon.Window : Adw.ApplicationWindow {
             }
         }
         return ids;
+    }
+
+    private void on_preferences (SimpleAction? action, Variant? parameter) {
+        var dialog = new Preferences ();
+        dialog.present (this);
+    }
+
+    private void on_about (SimpleAction? action, Variant? parameter) {
+        var about = new Adw.AboutDialog ();
+        about.application_name = "Calcumon";
+        about.application_icon = "dev.calcumon.Calcumon";
+        about.developer_name = "Calcumon contributors";
+        about.version = Config.VERSION;
+        about.comments = "Notepad calculator. Expressions are evaluated with math.js.";
+        about.developers = { "Calcumon contributors" };
+        about.copyright = "© 2026 Calcumon contributors";
+        about.license_type = Gtk.License.MIT_X11;
+        about.present (this);
+    }
+
+    private void on_font_increase (SimpleAction? action, Variant? parameter) {
+        AppSettings.get_default ().bump_font (1);
+    }
+
+    private void on_font_decrease (SimpleAction? action, Variant? parameter) {
+        AppSettings.get_default ().bump_font (-1);
     }
 }

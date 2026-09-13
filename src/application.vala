@@ -15,6 +15,10 @@ public class Calcumon.Application : Adw.Application {
         set_accels_for_action ("app.quit", { "<primary>q" });
         set_accels_for_action ("win.new-page", { "<primary>n" });
         set_accels_for_action ("win.close-page", { "<primary>w" });
+        set_accels_for_action ("win.preferences", { "<primary>comma" });
+        set_accels_for_action ("win.font-increase", { "<primary>plus", "<primary>equal" });
+        set_accels_for_action ("win.font-decrease", { "<primary>minus" });
+        set_accels_for_action ("win.show-help-overlay", { "<primary>question" });
     }
 
     protected override void startup () {

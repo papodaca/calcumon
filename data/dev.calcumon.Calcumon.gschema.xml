@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="dev.calcumon.Calcumon" path="/dev/calcumon/Calcumon/">
+    <key name="font-size" type="i">
+      <default>14</default>
+      <range min="8" max="32"/>
+      <summary>Editor font size</summary>
+    </key>
+    <key name="show-line-numbers" type="b">
+      <default>true</default>
+      <summary>Show line numbers</summary>
+    </key>
+    <key name="wrap-input" type="b">
+      <default>false</default>
+      <summary>Wrap input lines</summary>
+      <description>Unused. Wrapping the editor breaks row pairing with answers, so the control stays off.</description>
+    </key>
+    <key name="answer-position" type="s">
+      <default>'right'</default>
+      <choices>
+        <choice value="right"/>
+        <choice value="below"/>
+      </choices>
+      <summary>Answer column position</summary>
+      <description>Only right is implemented. below is reserved until it can stay aligned.</description>
+    </key>
+    <key name="continue-from-previous" type="b">
+      <default>true</default>
+      <summary>Continue from the previous answer</summary>
+    </key>
+    <key name="precision" type="i">
+      <default>4</default>
+      <range min="0" max="16"/>
+      <summary>Numeric precision</summary>
+    </key>
+  </schema>
+</schemalist>

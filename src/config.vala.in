@@ -1,0 +1,3 @@
+namespace Calcumon.Config {
+    public const string VERSION = "@VERSION@";
+}

@@ -7,6 +7,8 @@ public class Calcumon.SheetView : Gtk.Box {
     private SheetEngine? engine;
     private uint debounce_id = 0;
     private ulong dark_handler = 0;
+    private ulong settings_handler = 0;
+    private Gtk.CssProvider? font_css;
 
     public string text {
         owned get {
@@ -115,6 +117,11 @@ public class Calcumon.SheetView : Gtk.Box {
 
         editor.buffer.changed.connect (on_buffer_changed);
         realize.connect (update_result_width);
+        var app_settings = AppSettings.get_default ();
+        if (app_settings.settings != null) {
+            settings_handler = app_settings.settings.changed.connect ((key) => apply_settings ());
+        }
+        apply_settings ();
         recompute ();
     }
 
@@ -126,6 +133,10 @@ public class Calcumon.SheetView : Gtk.Box {
         if (dark_handler != 0) {
             Adw.StyleManager.get_default ().disconnect (dark_handler);
             dark_handler = 0;
+        }
+        if (settings_handler != 0 && AppSettings.get_default ().settings != null) {
+            AppSettings.get_default ().settings.disconnect (settings_handler);
+            settings_handler = 0;
         }
         base.dispose ();
     }
@@ -179,6 +190,9 @@ public class Calcumon.SheetView : Gtk.Box {
     }
 
     private void update_result_width () {
+        if (results_view == null || results_scroll == null) {
+            return;
+        }
         var layout = results_view.create_pango_layout ("0");
         int width;
         int height;
@@ -187,6 +201,29 @@ public class Calcumon.SheetView : Gtk.Box {
             width = 8;
         }
         results_scroll.width_request = width * 16;
+    }
+
+    private void apply_settings () {
+        if (editor == null || results_view == null || engine == null) {
+            return;
+        }
+        var s = AppSettings.get_default ();
+        editor.show_line_numbers = s.show_line_numbers;
+        editor.wrap_mode = Gtk.WrapMode.NONE;
+        engine.precision = s.precision;
+        engine.continue_from_previous = s.continue_from_previous;
+        apply_font (s.font_size);
+        recompute ();
+        update_result_width ();
+    }
+
+    private void apply_font (int pt) {
+        if (font_css == null) {
+            font_css = new Gtk.CssProvider ();
+            editor.get_style_context ().add_provider (font_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+            results_view.get_style_context ().add_provider (font_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+        }
+        font_css.load_from_string (".sheet-editor, .sheet-results { font-size: %dpt; }".printf (pt));
     }
 
     private void sync_error_color () {
