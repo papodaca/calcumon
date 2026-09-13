@@ -33,6 +33,7 @@ GtkSourceView --text changed--> sheet model --each line--> JSC + math.js
 | [04-pages.md](04-pages.md) | Tabs, save, restore. |
 | [05-sheet-language.md](05-sheet-language.md) | `ans`, `lineN`, totals, continue-from-previous. |
 | [06-settings.md](06-settings.md) | A short GSettings list, About, shortcuts. |
+| [07-combined-header.md](07-combined-header.md) | Tabs move into the header bar. One top row. |
 
 Each phase file has the same shape: goal, done when, layout and API, steps, tests, out of scope.
 
