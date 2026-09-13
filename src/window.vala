@@ -28,17 +28,6 @@ public class Calcumon.Window : Adw.ApplicationWindow {
         };
         add_action_entries (entries, this);
 
-        var header = new Adw.HeaderBar ();
-        var header_menu = new Menu ();
-        header_menu.append ("Preferences", "win.preferences");
-        header_menu.append ("Keyboard Shortcuts", "win.show-help-overlay");
-        header_menu.append ("About Calcumon", "win.about");
-        var menu_btn = new Gtk.MenuButton ();
-        menu_btn.icon_name = "open-menu-symbolic";
-        menu_btn.tooltip_text = "Main menu";
-        menu_btn.menu_model = header_menu;
-        header.pack_end (menu_btn);
-
         try {
             var builder = new Gtk.Builder.from_resource ("/dev/calcumon/Calcumon/gtk/help-overlay.ui");
             set_help_overlay (builder.get_object ("help_overlay") as Gtk.ShortcutsWindow);
@@ -64,6 +53,9 @@ public class Calcumon.Window : Adw.ApplicationWindow {
         var tab_bar = new Adw.TabBar ();
         tab_bar.view = tab_view;
         tab_bar.autohide = false;
+        tab_bar.expand_tabs = false;
+        tab_bar.hexpand = true;
+        tab_bar.add_css_class ("inline");
 
         var new_btn = new Gtk.Button.from_icon_name ("tab-new-symbolic");
         new_btn.tooltip_text = "New page";
@@ -74,15 +66,39 @@ public class Calcumon.Window : Adw.ApplicationWindow {
         var click = new Gtk.GestureClick ();
         click.set_button (1);
         click.pressed.connect ((n_press, x, y) => {
-            if (n_press == 2) {
+            if (n_press != 2) {
+                return;
+            }
+            if (pick_is_tab (tab_bar, x, y)) {
                 on_rename_page (null, null);
+            } else {
+                click.set_state (Gtk.EventSequenceState.DENIED);
             }
         });
         tab_bar.add_controller (click);
 
+        var header_menu = new Menu ();
+        header_menu.append ("Preferences", "win.preferences");
+        header_menu.append ("Keyboard Shortcuts", "win.show-help-overlay");
+        header_menu.append ("About Calcumon", "win.about");
+        var menu_btn = new Gtk.MenuButton ();
+        menu_btn.icon_name = "open-menu-symbolic";
+        menu_btn.tooltip_text = "Main menu";
+        menu_btn.menu_model = header_menu;
+        menu_btn.add_css_class ("flat");
+
+        var header = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
+        header.add_css_class ("toolbar");
+        header.append (new Gtk.WindowControls (Gtk.PackType.START));
+        header.append (tab_bar);
+        header.append (menu_btn);
+        header.append (new Gtk.WindowControls (Gtk.PackType.END));
+
+        var handle = new Gtk.WindowHandle ();
+        handle.child = header;
+
         var toolbar_view = new Adw.ToolbarView ();
-        toolbar_view.add_top_bar (header);
-        toolbar_view.add_top_bar (tab_bar);
+        toolbar_view.add_top_bar (handle);
         toolbar_view.content = tab_view;
         content = toolbar_view;
 
@@ -139,6 +155,17 @@ public class Calcumon.Window : Adw.ApplicationWindow {
             persist_session ();
         }
         return tab;
+    }
+
+    private static bool pick_is_tab (Gtk.Widget root, double x, double y) {
+        Gtk.Widget? widget = root.pick (x, y, Gtk.PickFlags.DEFAULT);
+        while (widget != null && widget != root) {
+            if (widget.css_name == "tab") {
+                return true;
+            }
+            widget = widget.get_parent ();
+        }
+        return false;
     }
 
     private void on_new_page (SimpleAction? action, Variant? parameter) {

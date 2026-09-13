@@ -24,7 +24,7 @@ src/
   window.vala         # Adw.TabView + TabBar
 ```
 
-**Widgets.** `Adw.ToolbarView` top bar stays. Put `Adw.TabBar` under the header bar, bound to `Adw.TabView`. Each `Adw.TabPage` child is a `SheetView`. `Adw.TabView.create_window` can stay unimplemented. We are not doing split windows.
+**Widgets.** `Adw.ToolbarView` top bar stays. Put `Adw.TabBar` under the header bar, bound to `Adw.TabView`. Each `Adw.TabPage` child is a `SheetView`. `Adw.TabView.create_window` can stay unimplemented. We are not doing split windows. Phase 07 moves the tab bar into the header.
 
 **`Page`.** `string id` (UUID), `string title`, `string text`. Default title "Page" or "Page N". Id never changes. Title changes on rename.
 
