@@ -6,6 +6,7 @@ public class Calcumon.SheetView : Gtk.Box {
     private Gtk.Paned? paned;
     private Gtk.TextTag? error_tag;
     private SheetEngine? engine;
+    private LineResult[] last_results = {};
     private uint debounce_id = 0;
     private ulong dark_handler = 0;
     private ulong settings_handler = 0;
@@ -37,6 +38,7 @@ public class Calcumon.SheetView : Gtk.Box {
     }
 
     public signal void content_changed ();
+    public signal void copied ();
 
     public SheetView () {
         Object (orientation: Gtk.Orientation.HORIZONTAL, spacing: 0);
@@ -91,6 +93,13 @@ public class Calcumon.SheetView : Gtk.Box {
         results_view.pixels_below_lines = editor.pixels_below_lines;
 
         error_tag = results_view.buffer.create_tag ("error");
+
+        results_view.has_tooltip = true;
+        results_view.query_tooltip.connect (on_query_tooltip);
+        var copy_click = new Gtk.GestureClick ();
+        copy_click.set_button (1);
+        copy_click.released.connect (on_copy_click);
+        results_view.add_controller (copy_click);
 
         editor_scroll = new Gtk.ScrolledWindow ();
         editor_scroll.set_policy (Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC);
@@ -175,20 +184,24 @@ public class Calcumon.SheetView : Gtk.Box {
 
         var vadj = editor_scroll.vadjustment;
         double scroll = vadj.value;
-        var results = engine.evaluate (editor.buffer.text);
+        last_results = engine.evaluate (editor.buffer.text);
         var builder = new StringBuilder ();
-        for (int i = 0; i < results.length; i++) {
+        for (int i = 0; i < last_results.length; i++) {
             if (i > 0) {
                 builder.append_c ('\n');
             }
-            builder.append (results[i].text);
+            if (last_results[i].kind == LineKind.ERROR) {
+                builder.append ("Error");
+            } else {
+                builder.append (last_results[i].text);
+            }
         }
 
         var buf = results_view.buffer;
         buf.set_text (builder.str, -1);
 
-        for (int i = 0; i < results.length; i++) {
-            if (results[i].kind != LineKind.ERROR) {
+        for (int i = 0; i < last_results.length; i++) {
+            if (last_results[i].kind != LineKind.ERROR) {
                 continue;
             }
             Gtk.TextIter line_start;
@@ -202,6 +215,46 @@ public class Calcumon.SheetView : Gtk.Box {
 
         vadj.value = scroll;
         results_scroll.set_vadjustment (editor_scroll.get_vadjustment ());
+    }
+
+    private bool on_query_tooltip (int x, int y, bool keyboard_tooltip, Gtk.Tooltip tooltip) {
+        if (keyboard_tooltip || last_results.length == 0) {
+            return false;
+        }
+        int line = line_at (x, y);
+        if (line < 0 || line >= last_results.length) {
+            return false;
+        }
+        if (last_results[line].kind != LineKind.ERROR) {
+            return false;
+        }
+        tooltip.set_text (last_results[line].text);
+        return true;
+    }
+
+    private void on_copy_click (int n_press, double x, double y) {
+        if (n_press != 1 || last_results.length == 0) {
+            return;
+        }
+        int line = line_at ((int) x, (int) y);
+        if (line < 0 || line >= last_results.length) {
+            return;
+        }
+        var result = last_results[line];
+        if (result.kind == LineKind.EMPTY || result.text.length == 0) {
+            return;
+        }
+        results_view.get_clipboard ().set_text (result.text);
+        copied ();
+    }
+
+    private int line_at (int x, int y) {
+        int bx;
+        int by;
+        results_view.window_to_buffer_coords (Gtk.TextWindowType.WIDGET, x, y, out bx, out by);
+        Gtk.TextIter iter;
+        results_view.get_iter_at_location (out iter, bx, by);
+        return iter.get_line ();
     }
 
     private int result_char_width () {

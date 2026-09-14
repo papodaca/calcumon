@@ -14,7 +14,45 @@ private class Calcumon.TapeLine {
 
 public class Calcumon.SheetEngine : Object {
     private const string PRELUDE = """
+var parser;
+var __lastAnswer;
+
+function __todayMs() {
+  var n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime();
+}
+
+function __wrapDate(ms, withTime) {
+  return { __calDate: true, ms: ms, withTime: !!withTime };
+}
+
+function __isDate(v) {
+  return !!(v && typeof v === 'object' && v.__calDate === true && typeof v.ms === 'number');
+}
+
+function __hasClock(ms) {
+  var d = new Date(ms);
+  return d.getHours() !== 0 || d.getMinutes() !== 0 || d.getSeconds() !== 0 || d.getMilliseconds() !== 0;
+}
+
+function __formatDate(ms, withTime) {
+  var d = new Date(ms);
+  var showTime = withTime || __hasClock(ms);
+  if (showTime) {
+    return new Intl.DateTimeFormat(undefined, {
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric'
+    }).format(d);
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    year: 'numeric', month: 'numeric', day: 'numeric'
+  }).format(d);
+}
+
 function __formatValue(result, precision) {
+  if (__isDate(result)) {
+    return __formatDate(result.ms, result.withTime);
+  }
   if (typeof result === 'number' && Number.isInteger(result)) {
     return math.format(result);
   }
@@ -24,12 +62,115 @@ function __formatValue(result, precision) {
   return math.format(result, {precision: precision});
 }
 
-function __evalLine(line, precision) {
+function __rewritePercentOf(line) {
+  return line.replace(/%[ \t]*of[ \t]*/gi, '/100*');
+}
+
+function __isoDate(str) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
+  if (!m) return null;
+  var y = parseInt(m[1], 10);
+  var mo = parseInt(m[2], 10);
+  var d = parseInt(m[3], 10);
+  var dt = new Date(y, mo - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+  return __wrapDate(dt.getTime(), false);
+}
+
+function __rhsAssignment(line) {
+  var eq = line.indexOf('=');
+  if (eq <= 0) return null;
+  var next = eq + 1 < line.length ? line.charAt(eq + 1) : '';
+  var prev = line.charAt(eq - 1);
+  if (next === '=' || prev === '!' || prev === '<' || prev === '>' || prev === '=') return null;
+  var name = line.substring(0, eq).trim();
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) return null;
+  return { name: name, expr: line.substring(eq + 1).trim() };
+}
+
+function __exprOf(line) {
+  var a = __rhsAssignment(line);
+  return a ? a.expr : line;
+}
+
+function __isIsoDateStart(line) {
+  return /^\d{4}-\d{2}-\d{2}(\b|$)/.test(__exprOf(line).trim());
+}
+
+function __resolveDate(datePart) {
+  datePart = datePart.trim();
+  if (!datePart) return null;
+  var iso = __isoDate(datePart);
+  if (iso) return iso;
   try {
-    var result = parser.evaluate(line);
+    var v = parser.evaluate(datePart);
+    if (__isDate(v)) return v;
+  } catch (e) {}
+  return null;
+}
+
+function __hoursFrom(expr) {
+  var u = math.evaluate('(' + expr + ') to hours');
+  if (u && typeof u.toNumber === 'function') {
+    try { return u.toNumber('hours'); } catch (e) {}
+  }
+  return Number(math.number(u));
+}
+
+function __tryDate(line) {
+  var assign = __rhsAssignment(line);
+  var expr = assign ? assign.expr : line;
+  var durRe = /([+-])\s*(\d+(?:\.\d+)?)\s*(milliseconds?|seconds?|minutes?|hours?|days?|weeks?|months?|years?)\b/gi;
+  var hoursExpr = '';
+  var foundDur = false;
+  var datePart = expr.replace(durRe, function(m, sign, num, unit) {
+    foundDur = true;
+    hoursExpr += ' ' + sign + ' (' + num + ' ' + unit + ')';
+    return '';
+  }).trim();
+  var base = __resolveDate(datePart);
+  if (!base) return null;
+  if (!foundDur && !assign && !__isoDate(datePart)) return null;
+  var result = base;
+  if (foundDur) {
+    var hours = __hoursFrom(hoursExpr);
+    if (!isFinite(hours)) return null;
+    result = __wrapDate(base.ms + hours * 3600 * 1000, base.withTime);
+  }
+  if (assign) parser.set(assign.name, result);
+  return result;
+}
+
+function __commit(result, number) {
+  __lastAnswer = result;
+  parser.set('ans', result);
+  parser.set('line' + number, result);
+}
+
+function __evalLine(line, precision, number) {
+  try {
+    line = __rewritePercentOf(line);
+    var result;
+    if (__isIsoDateStart(line)) {
+      result = __tryDate(line);
+      if (result == null) throw new Error('Invalid Date');
+    } else {
+      try {
+        result = parser.evaluate(line);
+      } catch (e) {
+        result = __tryDate(line);
+        if (result == null) {
+          var assign = __rhsAssignment(line);
+          result = __resolveDate(assign ? assign.expr : line);
+          if (result != null && assign) parser.set(assign.name, result);
+        }
+        if (result == null) throw e;
+      }
+    }
     if (result === undefined || typeof result === 'function') {
       return { kind: 'empty', text: '', value: undefined };
     }
+    __commit(result, number);
     return { kind: 'answer', text: String(__formatValue(result, precision)), value: result };
   } catch (e) {
     var msg = (e && e.message) ? String(e.message) : String(e);
@@ -38,6 +179,7 @@ function __evalLine(line, precision) {
 }
 
 function __isNumeric(v) {
+  if (__isDate(v)) return false;
   if (v === true || v === false || v === null || v === undefined) return false;
   if (typeof v === 'string') return false;
   if (typeof v === 'number') return isFinite(v);
@@ -62,26 +204,42 @@ function __sumValues(arr) {
 function __avgValues(arr) {
   return math.divide(__sumValues(arr), arr.length);
 }
+
+function __lineMs(n) {
+  try {
+    var v = parser.get('line' + n);
+    return __isDate(v) ? v.ms : NaN;
+  } catch (e) {
+    return NaN;
+  }
+}
+
+function __resetParser() {
+  parser = math.parser();
+  __lastAnswer = undefined;
+  parser.set('today', __wrapDate(__todayMs(), false));
+  parser.set('now', __wrapDate(Date.now(), true));
+}
 """;
 
     private JsRuntime runtime;
     private GenericArray<TapeLine> tape;
-    private JSC.Value? last_answer;
+    private bool has_last_answer;
     public int precision { get; set; default = 4; }
     public bool continue_from_previous { get; set; default = true; }
 
     public SheetEngine () throws EngineError {
         runtime = new JsRuntime ();
-        runtime.evaluate ("var parser = math.parser();");
         runtime.evaluate (PRELUDE);
+        runtime.evaluate ("__resetParser();");
         tape = new GenericArray<TapeLine> ();
     }
 
     public LineResult[] evaluate (string source) {
         tape = new GenericArray<TapeLine> ();
-        last_answer = null;
+        has_last_answer = false;
         try {
-            runtime.evaluate ("parser = math.parser();");
+            runtime.evaluate ("__resetParser();");
         } catch (EngineError e) {
             return { new LineResult (1, LineKind.ERROR, e.message) };
         }
@@ -111,14 +269,13 @@ function __avgValues(arr) {
             return fail (number, "line0 is invalid");
         }
 
-        if (has_identifier (expr, "ans") && last_answer == null) {
+        if (has_identifier (expr, "ans") && !has_last_answer) {
             return fail (number, "no previous answer");
         }
 
         try {
-            if (continue_from_previous && last_answer != null && is_continue_line (expr)) {
-                runtime.context.set_value ("__bindVal", last_answer);
-                runtime.evaluate ("parser.set('__prev', __bindVal);");
+            if (continue_from_previous && has_last_answer && is_continue_line (expr)) {
+                runtime.evaluate ("parser.set('__prev', __lastAnswer);");
                 expr = "__prev " + expr;
             }
 
@@ -163,16 +320,16 @@ function __avgValues(arr) {
             var ctx = runtime.context;
             var obj = runtime.call ("__evalLine", {
                 new JSC.Value.string (ctx, expr),
-                new JSC.Value.number (ctx, precision)
+                new JSC.Value.number (ctx, precision),
+                new JSC.Value.number (ctx, number)
             });
             var kind_s = obj.object_get_property ("kind").to_string ();
             var text = obj.object_get_property ("text").to_string ().strip ();
             switch (kind_s) {
             case "answer":
                 var value = obj.object_get_property ("value");
-                bind_answer (number, value);
                 tape.add (new TapeLine (LineKind.ANSWER, false, value, aggregate));
-                last_answer = value;
+                has_last_answer = true;
                 return new LineResult (number, LineKind.ANSWER, text);
             case "empty":
                 tape.add (new TapeLine (LineKind.EMPTY, false, null));
@@ -191,10 +348,12 @@ function __avgValues(arr) {
         return new LineResult (number, LineKind.ERROR, text);
     }
 
-    private void bind_answer (int number, JSC.Value value) throws EngineError {
-        runtime.context.set_value ("__bindVal", value);
-        runtime.evaluate ("parser.set('ans', __bindVal);");
-        runtime.evaluate ("parser.set('line%d', __bindVal);".printf (number));
+    public double line_epoch_ms (int number) {
+        try {
+            return runtime.evaluate ("__lineMs(%d)".printf (number)).to_double ();
+        } catch (EngineError e) {
+            return double.NAN;
+        }
     }
 
     private JSC.Value js_array (GenericArray<JSC.Value> parts) {
@@ -244,7 +403,8 @@ function __avgValues(arr) {
     }
 
     private static bool is_reserved_name (string name) {
-        return name == "ans" || name == "total" || name == "subtotal" || name == "avg" || is_line_name (name);
+        return name == "ans" || name == "total" || name == "subtotal" || name == "avg"
+            || name == "today" || name == "now" || is_line_name (name);
     }
 
     private static bool is_line_name (string name) {

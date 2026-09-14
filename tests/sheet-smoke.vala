@@ -12,7 +12,8 @@ int main (string[] args) {
 
         run_case (sheet, "1+2", (got) => got.strip () == "3", "1+2 => 3", ref failed);
         run_case (sheet, "a = 5\na^2", (got) => got == "5\n25", "a=5 / a^2", ref failed);
-        run_case (sheet, "1 +", (got) => got.strip ().length > 0 && got.strip () != "1", "1 + is error text", ref failed);
+        run_case (sheet, "1 +", (got) => got.strip () == "Error", "1 + is Error", ref failed);
+        run_case (sheet, "10% of 20", (got) => got.strip () == "2", "10% of 20 => 2", ref failed);
         run_case (sheet, "# heading", (got) => got.strip () == "", "comment is empty", ref failed);
 
         win.close ();

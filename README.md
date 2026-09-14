@@ -23,6 +23,10 @@ Keywords:
 - `total` sum of numeric answers so far
 - `subtotal` same, starting after the last blank line
 - `avg` mean of the same set `total` uses
+- `today` today's date
+- `now` today's date and time
+
+`today + 3 weeks` and `now + 36 hours` add a duration. `10% of 20` is 2, and `40 + 5%` is 42. `8 % 3` is still modulus.
 
 If a line starts with `+`, `-`, `*`, or `/`, it continues from the previous answer. Turn that off in preferences.
 
@@ -35,7 +39,7 @@ total
 
 gives 100, 120, 240, 460.
 
-`ans`, `total`, `subtotal`, `avg`, and `lineN` are reserved. You cannot assign to them.
+`ans`, `total`, `subtotal`, `avg`, `today`, `now`, and `lineN` are reserved. You cannot assign to them.
 
 math.js supplies the rest: functions, units, constants. See the [math.js docs](https://mathjs.org/docs/index.html). There are no plots, downloaded currency rates, or Excel functions. Those stayed out on purpose.
 
@@ -116,7 +120,7 @@ Preferences are GSettings schema `dev.calcumon.Calcumon`: font size, line number
 | Ctrl+- | Smaller font |
 | Ctrl+? | Shortcuts overlay |
 
-Double-click a tab to rename it.
+Double-click a tab to rename it. Click an answer to copy it. A failed line shows Error; hover for the message.
 
 ## License
 

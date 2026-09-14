@@ -1,5 +1,6 @@
 public class Calcumon.Window : Adw.ApplicationWindow {
     private Adw.TabView tab_view;
+    private Adw.ToastOverlay toast_overlay;
     private PageStore store;
     private HashTable<SheetView, Page> sheet_pages;
     private uint save_timeout = 0;
@@ -100,7 +101,10 @@ public class Calcumon.Window : Adw.ApplicationWindow {
         var toolbar_view = new Adw.ToolbarView ();
         toolbar_view.add_top_bar (handle);
         toolbar_view.content = tab_view;
-        content = toolbar_view;
+
+        toast_overlay = new Adw.ToastOverlay ();
+        toast_overlay.child = toolbar_view;
+        content = toast_overlay;
 
         close_request.connect (() => {
             flush_save ();
@@ -144,6 +148,7 @@ public class Calcumon.Window : Adw.ApplicationWindow {
         var sheet = new SheetView ();
         sheet.text = page.text;
         sheet.content_changed.connect (() => schedule_save (sheet));
+        sheet.copied.connect (on_copied);
         sheet_pages.insert (sheet, page);
 
         var tab = tab_view.append (sheet);
@@ -155,6 +160,12 @@ public class Calcumon.Window : Adw.ApplicationWindow {
             persist_session ();
         }
         return tab;
+    }
+
+    private void on_copied () {
+        var toast = new Adw.Toast ("Copied");
+        toast.timeout = 1;
+        toast_overlay.add_toast (toast);
     }
 
     private static bool pick_is_tab (Gtk.Widget root, double x, double y) {
