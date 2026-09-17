@@ -1,6 +1,7 @@
 /build/
 /builddir/
 /build-pkg/
+/packaging/.app-version
 *~
 *.swp
 .flatpak-builder/

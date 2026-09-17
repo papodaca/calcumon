@@ -48,6 +48,10 @@ trap restore_ownership EXIT
 chown -R builder:builder "${ROOT}"
 
 VERSION=$(flatpak_version)
+# Meson inside the SDK has no .git (dir source skips it). Stamp the tag so
+# the About dialog matches the bundle name.
+printf '%s\n' "${VERSION}" > "${ROOT}/packaging/.app-version"
+chown builder:builder "${ROOT}/packaging/.app-version"
 export ROOT VERSION
 sudo -u builder env HOME=/home/builder ROOT="${ROOT}" VERSION="${VERSION}" \
   bash -euo pipefail <<'EOF'

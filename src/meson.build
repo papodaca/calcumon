@@ -14,7 +14,7 @@ sheet_view_source = files('sheet-view.vala')
 settings_source = files('settings.vala')
 
 config_data = configuration_data ()
-config_data.set ('VERSION', meson.project_version ())
+config_data.set ('VERSION', app_version)
 config_vala = configure_file (
   input: 'config.vala.in',
   output: 'config.vala',

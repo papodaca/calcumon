@@ -229,7 +229,8 @@ mkdir -p "${APPDIR}"
 
 fetch_tooling
 
-meson setup "${BUILDDIR}" "${REPO_ROOT}" --prefix=/usr --buildtype=release
+meson setup "${BUILDDIR}" "${REPO_ROOT}" --prefix=/usr --buildtype=release \
+  -Dapp_version="${VERSION}"
 meson compile -C "${BUILDDIR}"
 meson install -C "${BUILDDIR}" --destdir "${APPDIR}"
 glib-compile-schemas "${APPDIR}/usr/share/glib-2.0/schemas"

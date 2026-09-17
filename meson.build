@@ -9,6 +9,31 @@ project(
   ],
 )
 
+fs = import('fs')
+
+# Git tag is the source of truth (packaging/version.sh). meson.project_version()
+# is only the snapshot fallback when there is no checkout and no override.
+app_version = get_option('app_version').strip()
+if app_version == '' and fs.exists(meson.project_source_root() / '.git')
+  version_sh = meson.project_source_root() / 'packaging' / 'version.sh'
+  bash = find_program('bash', required: false)
+  if bash.found() and fs.is_file(version_sh)
+    version_r = run_command(bash, version_sh, check: false)
+    if version_r.returncode() == 0
+      app_version = version_r.stdout().strip()
+    endif
+  endif
+endif
+if app_version == ''
+  version_stamp = meson.project_source_root() / 'packaging' / '.app-version'
+  if fs.is_file(version_stamp)
+    app_version = fs.read(version_stamp).strip()
+  endif
+endif
+if app_version == ''
+  app_version = meson.project_version()
+endif
+
 gnome = import('gnome')
 
 gtk_dep = dependency('gtk4', version: '>= 4.14')
@@ -25,6 +50,8 @@ subdir('tests')
 meson.add_devenv({
   'GSETTINGS_SCHEMA_DIR': meson.project_build_root () / 'data',
 })
+
+summary({'Version': app_version}, section: 'Calcumon')
 
 gnome.post_install(
   glib_compile_schemas: true,

@@ -45,8 +45,12 @@ pkgver() {
 
 build() {
   cd "${_repo_root}"
+  local ver
+  ver=$("${_repo_root}/packaging/version.sh")
   if [[ ! -f build-pkg/build.ninja ]]; then
-    arch-meson . build-pkg
+    arch-meson . build-pkg -Dapp_version="${ver}"
+  else
+    meson configure build-pkg -Dapp_version="${ver}"
   fi
   meson compile -C build-pkg
 }

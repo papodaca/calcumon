@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Print the package version.
-# Prefer a v* tag (CI GITHUB_REF, then tags on HEAD). Untagged builds get a snapshot.
+# Print the package / About-dialog version.
+# Prefer a v* tag (CI GITHUB_REF, then tags on HEAD). Untagged builds get a
+# snapshot whose base is the latest v* tag, else meson.build's version.
 #
-#   packaging/version.sh         # 0.1.0  or  0.1.0+git10.c4a070d
-#   packaging/version.sh --arch  # 0.1.0  or  0.1.0.r10.c4a070d
+#   packaging/version.sh         # 1.1.0  or  1.1.0+git10.c4a070d
+#   packaging/version.sh --arch  # 1.1.0  or  1.1.0.r10.c4a070d
 set -euo pipefail
 
 arch=0
@@ -58,6 +59,11 @@ while IFS= read -r t; do
     exit 0
   fi
 done < <(git -C "${ROOT}" tag --points-at HEAD 2>/dev/null || true)
+
+nearest=$(git -C "${ROOT}" describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
+if ver=$(from_vtag "${nearest}"); then
+  base=${ver}
+fi
 
 count=$(git -C "${ROOT}" rev-list --count HEAD)
 short=$(git -C "${ROOT}" rev-parse --short HEAD)

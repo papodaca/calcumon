@@ -1,0 +1,6 @@
+option(
+  'app_version',
+  type: 'string',
+  value: '',
+  description: 'About dialog version. Empty uses the git tag via packaging/version.sh.',
+)
